@@ -1,0 +1,2 @@
+{"policy_id":"pol_refund_v1","version":"1.0","effective_from":"2026-01-01T00:00:00Z","currency":"INR","refund_window_days":30,"automatic_ceiling_minor":200000,"required_order_status":"DELIVERED","evaluation_reference_timestamp":"2026-10-18T00:00:00Z","rules":{"full_refund_once":true,"missing_or_conflicting_evidence_blocks_auto_approval":true,"high_value_eligible_routes_to_review":true}}
+
