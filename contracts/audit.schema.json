@@ -1,0 +1,7 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema", "$id":"https://proofgate.ai/schemas/audit/1.0", "title":"ProofGate Audit Event", "description":"Append-only audit record.", "type":"object", "additionalProperties":false,
+  "required":["audit_id","action_id","event_type","occurred_at","payload"],
+  "properties":{"audit_id":{"type":"string","pattern":"^aud_[A-Z0-9_]+$"},"action_id":{"type":"string","pattern":"^act_[A-Z0-9_]+$"},"event_type":{"enum":["ACTION_RECEIVED","VERIFICATION_COMPLETED","REVIEW_DECIDED","AUTHORIZATION_ISSUED","EXECUTION_SUCCEEDED","EXECUTION_FAILED","EXECUTION_REJECTED"]},"occurred_at":{"type":"string","format":"date-time"},"payload":{"type":"object","additionalProperties":true}},
+  "examples":[{"audit_id":"aud_001","action_id":"act_001","event_type":"VERIFICATION_COMPLETED","occurred_at":"2026-10-18T00:00:00Z","payload":{"decision":"APPROVE","reason_codes":["ELIGIBLE"]}}]
+}
+
