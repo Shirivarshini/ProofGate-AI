@@ -1,0 +1,68 @@
+openapi: 3.1.0
+info:
+  title: ProofGate AI API
+  version: 0.1.0-stage0
+  description: Stage 0 contract. Staff/session authentication is assumed except health; authorization is enforced server-side.
+servers: [{url: http://localhost:8000}]
+paths:
+  /health:
+    get:
+      summary: Service health (no authentication)
+      responses: {'200': {description: healthy, content: {application/json: {schema: {$ref: '#/components/schemas/Health'}, example: {status: ok}}}}}
+  /api/agent/run:
+    post:
+      summary: Submit a user request and receive an asynchronously progressing action result
+      security: [{bearerAuth: []}]
+      requestBody: {required: true, content: {application/json: {schema: {$ref: '#/components/schemas/AgentRunRequest'}, example: {request: "Refund my order ord_001", customer_id: cus_001}}}}
+      responses:
+        '202': {description: action accepted; execution may be pending, content: {application/json: {schema: {$ref: '#/components/schemas/Action'}, example: {action_id: act_001, verification_decision: REVIEW, risk_level: HIGH, execution_status: PENDING_REVIEW, reason_codes: [AUTO_CEILING_EXCEEDED]}}}}
+        '400': {$ref: '#/components/responses/InvalidAction'}
+        '401': {$ref: '#/components/responses/AuthFailure'}
+        '503': {$ref: '#/components/responses/Unavailable'}
+  /api/actions/{id}:
+    get:
+      summary: Read verification, execution, evidence and audit-safe action state
+      security: [{bearerAuth: []}]
+      parameters: [{$ref: '#/components/parameters/ActionId'}]
+      responses: {'200': {description: action, content: {application/json: {schema: {$ref: '#/components/schemas/Action'}}}}, '404': {$ref: '#/components/responses/NotFound'}}
+  /api/audit-logs:
+    get:
+      summary: List audit events; staff role required
+      security: [{bearerAuth: []}]
+      parameters: [{name: action_id, in: query, schema: {type: string}}, {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 25}}]
+      responses: {'200': {description: events, content: {application/json: {schema: {type: object, required: [items], properties: {items: {type: array, items: {$ref: '#/components/schemas/AuditEvent'}}}}}}}, '401': {$ref: '#/components/responses/AuthFailure'}}
+  /api/reviews:
+    get:
+      summary: List pending/resolved reviews; reviewer role required
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: reviews, content: {application/json: {schema: {type: object, required: [items], properties: {items: {type: array, items: {$ref: '#/components/schemas/Review'}}}}}}}}
+  /api/reviews/{id}/decision:
+    post:
+      summary: Resolve eligible pending review; mandatory policy blocks cannot be overridden
+      security: [{bearerAuth: []}]
+      parameters: [{$ref: '#/components/parameters/ReviewId'}]
+      requestBody: {required: true, content: {application/json: {schema: {type: object, additionalProperties: false, required: [outcome], properties: {outcome: {type: string, enum: [APPROVED, REJECTED]}, comment: {type: string, maxLength: 1000}}}, example: {outcome: APPROVED, comment: "Customer supplied receipt"}}}}
+      responses: {'200': {description: review resolved, content: {application/json: {schema: {$ref: '#/components/schemas/Review'}}}}, '404': {$ref: '#/components/responses/NotFound'}, '409': {description: REVIEW_ALREADY_RESOLVED or POLICY_VIOLATION, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}}
+  /api/metrics:
+    get:
+      summary: Evaluation and operational aggregate metrics; staff role required
+      security: [{bearerAuth: []}]
+      responses: {'200': {description: metrics, content: {application/json: {schema: {type: object, required: [window, counts], properties: {window: {type: string}, counts: {type: object}, verification_latency_ms: {type: object}}}}}}}
+components:
+  securitySchemes: {bearerAuth: {type: http, scheme: bearer, bearerFormat: JWT}}
+  parameters:
+    ActionId: {name: id, in: path, required: true, schema: {type: string, pattern: '^act_[A-Z0-9_]+$'}}
+    ReviewId: {name: id, in: path, required: true, schema: {type: string, pattern: '^rev_[A-Z0-9_]+$'}}
+  responses:
+    InvalidAction: {description: INVALID_ACTION_SCHEMA, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+    AuthFailure: {description: AUTHORIZATION_FAILURE, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+    NotFound: {description: ACTION_NOT_FOUND, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+    Unavailable: {description: VERIFICATION_UNAVAILABLE, content: {application/json: {schema: {$ref: '#/components/schemas/Error'}}}}
+  schemas:
+    AgentRunRequest: {type: object, additionalProperties: false, required: [request, customer_id], properties: {request: {type: string, minLength: 1, maxLength: 4000}, customer_id: {type: string, pattern: '^cus_[A-Z0-9_]+$'}}}
+    Action: {type: object, required: [action_id, verification_decision, risk_level, execution_status, reason_codes], properties: {action_id: {type: string}, verification_decision: {type: string, enum: [APPROVE, BLOCK, REVIEW]}, risk_level: {type: string, enum: [LOW, MEDIUM, HIGH]}, execution_status: {type: string, enum: [NOT_STARTED, PENDING_REVIEW, EXECUTED, FAILED, NOT_EXECUTED]}, reason_codes: {type: array, items: {type: string}}, evidence: {type: array, items: {type: object}}}}
+    Review: {type: object, required: [review_id, action_id, status], properties: {review_id: {type: string}, action_id: {type: string}, status: {type: string, enum: [PENDING, RESOLVED]}, outcome: {type: [string, 'null'], enum: [APPROVED, REJECTED, null]}}}
+    AuditEvent: {type: object, required: [audit_id, action_id, event_type, occurred_at], properties: {audit_id: {type: string}, action_id: {type: string}, event_type: {type: string}, occurred_at: {type: string, format: date-time}, payload: {type: object}}}
+    Error: {type: object, required: [code, message], properties: {code: {type: string, enum: [INVALID_ACTION_SCHEMA, MISSING_TRUSTED_EVIDENCE, POLICY_VIOLATION, VERIFICATION_UNAVAILABLE, ACTION_NOT_FOUND, REVIEW_ALREADY_RESOLVED, AUTHORIZATION_FAILURE, DUPLICATE_EXECUTION_ATTEMPT]}, message: {type: string}, details: {type: object}}}
+    Health: {type: object, required: [status], properties: {status: {type: string, enum: [ok]}}}
+
