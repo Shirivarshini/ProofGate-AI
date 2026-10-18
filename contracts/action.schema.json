@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://proofgate.ai/schemas/action/1.0",
+  "title": "ProofGate Agent Action", "description": "Untrusted proposed protected action.",
+  "type": "object", "additionalProperties": false,
+  "required": ["action_id", "schema_version", "tool_name", "arguments", "actor_context"],
+  "properties": {
+    "action_id": {"type":"string","pattern":"^act_[A-Z0-9_]+$"}, "schema_version":{"const":"1.0"},
+    "tool_name":{"const":"refund.create"},
+    "arguments":{"type":"object","additionalProperties":false,"required":["order_id","customer_id","amount_minor","currency","reason"],"properties":{"order_id":{"type":"string","pattern":"^ord_[A-Z0-9_]+$"},"customer_id":{"type":"string","pattern":"^cus_[A-Z0-9_]+$"},"amount_minor":{"type":"integer","minimum":1},"currency":{"const":"INR"},"reason":{"type":"string","minLength":1,"maxLength":500}}},
+    "actor_context":{"type":"object","additionalProperties":false,"required":["actor_id","actor_type","request_id"],"properties":{"actor_id":{"type":"string","minLength":1},"actor_type":{"enum":["CUSTOMER","SUPPORT_AGENT"]},"request_id":{"type":"string","minLength":1}}},
+    "candidate_evidence_references":{"type":"array","maxItems":10,"items":{"type":"object","additionalProperties":false,"required":["evidence_id","source_type","source_id"],"properties":{"evidence_id":{"type":"string","pattern":"^ev_[A-Z0-9_]+$"},"source_type":{"enum":["ORDER","POLICY","CUSTOMER"]},"source_id":{"type":"string","minLength":1}}}}
+  },
+  "examples": [{"action_id":"act_001","schema_version":"1.0","tool_name":"refund.create","arguments":{"order_id":"ord_001","customer_id":"cus_001","amount_minor":129900,"currency":"INR","reason":"Item damaged"},"actor_context":{"actor_id":"cus_001","actor_type":"CUSTOMER","request_id":"req_001"}}]
+}
+
