@@ -1,0 +1,2 @@
+import { useEffect, useState } from 'react'
+export function useLoad(loader) { const [state, setState] = useState({ loading: true, data: null, error: null }); useEffect(() => { let alive = true; loader().then(data => alive && setState({ loading:false, data, error:null })).catch(error => alive && setState({ loading:false, data:null, error:error.message })); return () => { alive=false }; }, [loader]); return state }

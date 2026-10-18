@@ -1,0 +1,6 @@
+import { useCallback } from 'react'
+import { api } from '../api/client'
+import { ErrorState, LoadingState } from '../components/State'
+import { useLoad } from '../hooks'
+
+export default function Overview() { const load = useCallback(() => Promise.all([api.getMetrics(), api.getAuditLogs()]), []); const {loading,data,error}=useLoad(load); if(loading)return <LoadingState/>; if(error)return <ErrorState message={error}/>; const [metrics, audit] = data; const counts=metrics.counts; return <section><div className="metric-grid">{[['Verified actions',counts.total],['Approved',counts.approved],['Blocked',counts.blocked],['Needs review',counts.review]].map(([label,value])=><article className="metric-card" key={label}><span>{label}</span><strong>{value}</strong></article>)}</div><div className="panel"><div className="panel-title"><div><p className="eyebrow">RECENT ACTIVITY</p><h2>Audit events</h2></div><span>p95 verification {metrics.verification_latency_ms.p95}ms</span></div><table><thead><tr><th>Time</th><th>Action</th><th>Event</th><th>Details</th></tr></thead><tbody>{audit.items.map(e=><tr key={e.audit_id}><td>{new Date(e.occurred_at).toLocaleTimeString()}</td><td>{e.action_id}</td><td>{e.event_type}</td><td><code>{JSON.stringify(e.payload)}</code></td></tr>)}</tbody></table></div></section> }
