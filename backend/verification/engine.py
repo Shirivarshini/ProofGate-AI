@@ -145,9 +145,12 @@ def verify(
     customer = store.get_customer(order_customer_id) if isinstance(order_customer_id, str) else None
     requested_customer = store.get_customer(arguments["customer_id"])
     policy = store.get_policy()
-    if customer is None or requested_customer is None or policy is None:
+    if customer is None or requested_customer is None:
         risk_level, factors = _risk_for_amount(arguments["amount_minor"])
         return _result(action_id, "BLOCK", risk_level, factors, EVIDENCE_MISSING)
+    if policy is None:
+        risk_level, factors = _risk_for_amount(arguments["amount_minor"])
+        return _result(action_id, "BLOCK", risk_level, factors, VERIFICATION_UNAVAILABLE)
 
     outcome: PolicyOutcome = evaluate_refund(
         arguments,
