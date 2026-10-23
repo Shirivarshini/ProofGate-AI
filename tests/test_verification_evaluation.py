@@ -48,8 +48,8 @@ class VerificationEvaluationTests(unittest.TestCase):
         }
 
         self.assertEqual(len(scenario_ids), 20)
-        self.assertEqual(len(adversarial_ids), 24)
-        self.assertEqual(len(scenario_ids | adversarial_ids), 44)
+        self.assertEqual(len(adversarial_ids), 25)
+        self.assertEqual(len(scenario_ids | adversarial_ids), 45)
 
     def test_empty_evaluation_has_undefined_rates(self) -> None:
         report = compare_guarded_to_baseline([], self.store)
