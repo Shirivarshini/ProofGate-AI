@@ -48,9 +48,9 @@ Day 1 contracts and fixtures; Day 2 skeletons; Day 3 trusted verification and ga
 
 ## Status and setup
 
-**Current status: Stage 0 complete as documentation, contracts, and synthetic fixtures only.** No backend, agent, dashboard, payment integration, deployment, or evaluation result is claimed implemented.
+**Current status:** The deterministic refund verifier, fixture scenario runner, structured verification log events, and contract health endpoint are implemented. The agent adapter, authenticated orchestration/review APIs, durable audit persistence, protected execution gateway, and production identity integration remain deferred; no real refund is executed.
 
-Future implementers: copy `.env.example` to `.env`, supply only development credentials, read `AGENTS.md`, then implement only against the OpenAPI and JSON-schema contracts. Do not commit `.env`.
+To install and run the backend checks, run `python -m pip install -r backend/requirements-dev.txt`, then `python -m pytest` followed by `python -m backend.scenario_runner` from the repository root. The scenario runner is a deterministic fixture harness, not Gemini inference. Numeric amounts in fixture request text are interpreted as INR and converted to paise; requests without a numeric amount use the remaining order balance. This amount derivation is test-harness-only; live requests must supply `amount_minor` in a contract-defined action.
 
 ## Security principles
 
@@ -59,4 +59,3 @@ Protected writes are gateway-only; verification fails closed; agent evidence is 
 ## Round 1 alignment
 
 The foundation supports the mandatory 600â€“900 word technical abstract and optional one-page architecture diagram. It is designed to demonstrate a checker that catches a deliberately bad refund action before execution; a working MVP is not claimed for Round 1.
-
