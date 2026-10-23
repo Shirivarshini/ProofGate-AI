@@ -68,7 +68,7 @@ def evaluate_refund(
         or caller_customer_id != arguments["customer_id"]
     ):
         return blocked(CUSTOMER_AUTHORIZATION_FAILED)
-    if customer.get("customer_id") != order.get("customer_id") or customer.get("status") != "ACTIVE":
+    if customer.get("customer_id") != order.get("customer_id"):
         return blocked(CUSTOMER_AUTHORIZATION_FAILED)
 
     if not isinstance(policy.get("policy_id"), str) or not isinstance(policy.get("version"), str):
@@ -99,6 +99,8 @@ def evaluate_refund(
         return blocked(EVIDENCE_CONFLICT)
     if EVALUATION_REFERENCE_TIME - delivered_at > timedelta(days=refund_window_days):
         return blocked(REFUND_WINDOW_EXPIRED)
+    if customer.get("status") != "ACTIVE":
+        return blocked(CUSTOMER_AUTHORIZATION_FAILED)
 
     total_minor = order.get("amount_minor")
     refunded_minor = order.get("refunded_minor")
