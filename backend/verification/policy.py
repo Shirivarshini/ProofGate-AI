@@ -92,9 +92,12 @@ def evaluate_refund(
     if arguments.get("currency") != order.get("currency"):
         return blocked(POLICY_VIOLATION)
 
-    delivered_at = _timestamp(order.get("delivered_at"))
-    if order.get("status") != "DELIVERED" or delivered_at is None:
+    delivered_at_value = order.get("delivered_at")
+    if order.get("status") != "DELIVERED" or delivered_at_value is None:
         return blocked(ORDER_NOT_DELIVERED)
+    delivered_at = _timestamp(delivered_at_value)
+    if delivered_at is None:
+        return blocked(EVIDENCE_CONFLICT)
     if delivered_at > EVALUATION_REFERENCE_TIME:
         return blocked(EVIDENCE_CONFLICT)
     if EVALUATION_REFERENCE_TIME - delivered_at > timedelta(days=refund_window_days):
