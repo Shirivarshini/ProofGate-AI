@@ -28,7 +28,7 @@ class AdversarialVerificationTests(unittest.TestCase):
         return EvidenceStore(customers, orders, policy)
 
     def test_adversarial_proposals_fail_closed_or_follow_trusted_context(self) -> None:
-        self.assertEqual(len(self.cases), 24)
+        self.assertEqual(len(self.cases), 25)
         for case in self.cases:
             with self.subTest(scenario_id=case["scenario_id"]):
                 result = verify(
